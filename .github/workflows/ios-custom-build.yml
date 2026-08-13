@@ -60,7 +60,7 @@ on:
 
 jobs:
   build-ios:
-    uses: mosip/kattu/.github/workflows/ios-publish.yml@gpgupdate-masterj21
+    uses: mosip/kattu/.github/workflows/ios-publish.yml@v0.0.1
     with:
       NODE_VERSION: '18.x'
       MIMOTO_HOST: ${{ inputs.mimotoBackendServiceUrl }}
