@@ -437,7 +437,7 @@ fileignoreconfig:
   - filename: shared/hooks/useScreenHeight.ts
     checksum: e3f13e7181efc6e6ad5896102bac1309bd8147ba711ff71f64a600a0dffc1364
   - filename: .github/workflows/az-ios-testflight.yml
-    checksum: 56c5b0c754ada28eef9cf8108c7b9f3094ec7c7a5b48c24590e09aac3d5f7ef3
+    checksum: b8782e810585b176ccbb497f01e45ff33d691540773b9229a75143031c1c19d0
   - filename: ios/ExportOptions-Azertica.plist
     checksum: f02382841899c03bd6d108491bf1808e07a99fe45346804f84f9722f520e56e4
   - filename: .github/scripts/distribute-testflight-build.mjs
