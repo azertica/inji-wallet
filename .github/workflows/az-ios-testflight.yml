@@ -108,10 +108,6 @@ jobs:
             -derivedDataPath "$RUNNER_TEMP/DerivedData" \
             -archivePath "$archive" \
             -resultBundlePath "$result_bundle" \
-            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="$APPSTORE_PROFILE_NAME" \
             2>&1 | tee "$RUNNER_TEMP/archive.log" | xcbeautify
 
           app="$archive/Products/Applications/Inji.app"
