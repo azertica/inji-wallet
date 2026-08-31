@@ -73,7 +73,7 @@ typedef NS_ENUM(NSInteger, URLScheme) {
 }
 
 - (URLScheme)schemeFromURL:(NSURL *)url {
-    if ([url.scheme isEqualToString:@"io.mosip.residentapp.inji"]) {
+    if ([url.scheme isEqualToString:@"com.azertica.inji.wallet"]) {
         return URLSchemeInji;
     } else if ([url.scheme isEqualToString:@"openid4vp"]) {
         return URLSchemeOpenID4VP;

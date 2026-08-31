@@ -43,3 +43,29 @@ allprojects { repositories {
     }
 }
 // @generated end expo-camera-import
+
+// --- AZERTICA jvm target alignment -------------------------------------------
+// react-native-image-colors (and others) gate their compileOptions/kotlinOptions
+// on `agpVersion < 8`. AGP here is 8.4, so that block never runs and the module
+// declares no target at all: Java then defaults to 17 via AGP while Kotlin
+// defaults to the Gradle JVM, and the build dies with
+//   "Inconsistent JVM-target compatibility ... Javac (17) and Kotlin (21)".
+// Pinning both to 17 - the version Inji actually specifies - removes the
+// dependency on which JDK happens to be running Gradle.
+subprojects { sub ->
+    sub.afterEvaluate {
+        if (sub.hasProperty("android")) {
+            sub.android {
+                compileOptions {
+                    sourceCompatibility JavaVersion.VERSION_17
+                    targetCompatibility JavaVersion.VERSION_17
+                }
+            }
+        }
+        sub.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+            compilerOptions {
+                jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+            }
+        }
+    }
+}

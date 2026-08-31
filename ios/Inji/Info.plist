@@ -25,13 +25,7 @@
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>io.mosip.residentapp</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>io.mosip.residentapp.inji</string>
+				<string>com.azertica.inji.wallet</string>
 			</array>
 		</dict>
 		<dict>
@@ -44,7 +38,7 @@
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>ENABLE_AUTH</key>
-	<string>true</string>
+	<string>false</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>

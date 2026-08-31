@@ -2,8 +2,8 @@ import {APPLICATION_THEME} from 'react-native-dotenv';
 
 const adaptiveImage =
   APPLICATION_THEME?.toLowerCase() === 'purple'
-    ?  ('./assets/images/png/purpleSplashScreen.png')
-      : ('./assets/images/png/SplashScreen.png');
+    ? './assets/images/png/purpleSplashScreen.png'
+    : './assets/images/png/SplashScreen.png';
 export default {
   name: 'Inji',
   slug: 'inji',
@@ -20,12 +20,12 @@ export default {
   },
   assetBundlePatterns: ['**/*'],
   ios: {
-    bundleIdentifier: 'io.mosip.inji.mobileid',
+    bundleIdentifier: 'com.azertica.inji.wallet',
     buildNumber: '1.0.0',
     supportsTablet: true,
   },
   android: {
-    package: 'io.mosip.residentapp',
+    package: 'com.azertica.inji.wallet',
     versionCode: 1,
     adaptiveIcon: {
       foregroundImage: adaptiveImage,

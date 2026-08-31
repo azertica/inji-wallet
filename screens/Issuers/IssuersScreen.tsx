@@ -124,10 +124,10 @@ export const IssuersScreen: React.FC<
     if (controller.isAuthEndpointToOpen) {
       (props.navigation as any).navigate(AUTH_ROUTES.AuthView, {
         authorizationURL: controller.authEndpoint,
-        clientId: controller.selectedIssuer.client_id ?? 'wallet',
+        clientId: controller.selectedIssuer.client_id ?? 'inji-wallet',
         redirectUri:
           controller.selectedIssuer.redirect_uri ??
-          'io.mosip.residentapp.inji://oauthredirect',
+          'com.azertica.inji.wallet://oauthredirect',
         controller: controller,
       });
     }

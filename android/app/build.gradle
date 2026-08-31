@@ -112,14 +112,17 @@ android {
     namespace 'io.mosip.residentapp'
 
     defaultConfig {
-        applicationId 'io.mosip.residentapp'
+        applicationId 'com.azertica.inji.wallet'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionName "0.22.1"
-        versionCode 1
+        // CI must be able to make these unique per upload. Play rejects a re-upload
+        // of the same versionCode outright, and TestFlight rejects a duplicate
+        // build number - a hardcoded 1 means exactly one successful upload, ever.
+        // Defaults preserve the local developer build unchanged.
+        versionName System.getenv("AZ_VERSION_NAME") ?: "0.22.2"
+        versionCode Integer.parseInt(System.getenv("AZ_VERSION_CODE") ?: "1")
         manifestPlaceholders = [
-                APP_NAME             : APP_NAME,
-                appAuthRedirectScheme: 'io.mosip.residentapp.inji'
+                APP_NAME: APP_NAME
         ]
     }
 

@@ -135,8 +135,8 @@ class VciClient {
     let response = '';
     try {
       const clientMetadata = {
-        clientId: 'wallet',
-        redirectUri: 'io.mosip.residentapp.inji://oauthredirect',
+        clientId: 'inji-wallet',
+        redirectUri: 'com.azertica.inji.wallet://oauthredirect',
       };
       response = await this.InjiVciClient.requestCredentialByOffer(
         credentialOffer,

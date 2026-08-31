@@ -1,0 +1,16 @@
+diff --git a/node_modules/expo-localization/ios/LocalizationModule.swift b/node_modules/expo-localization/ios/LocalizationModule.swift
+index 17c9cb7..7ff2e59 100644
+--- a/node_modules/expo-localization/ios/LocalizationModule.swift
++++ b/node_modules/expo-localization/ios/LocalizationModule.swift
+@@ -123,5 +123,11 @@ public class LocalizationModule: Module {
+       return "roc"
+     case .iso8601:
+       return "iso8601"
++    // Calendar.Identifier is a non-frozen system enum and the iOS 26 SDK added cases
++    // this switch predates, so it stopped being exhaustive and failed to compile.
++    // @unknown default (not plain default) keeps the compiler warning us if Apple adds
++    // more, while still building. "gregory" is the BCP 47 default per CLDR.
++    @unknown default:
++      return "gregory"
+     }
+   }

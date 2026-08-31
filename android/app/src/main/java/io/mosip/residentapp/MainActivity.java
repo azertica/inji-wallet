@@ -62,7 +62,7 @@ public class MainActivity extends ReactActivity {
     if (scheme == null) return;
 
     switch (scheme) {
-      case "io.mosip.residentapp.inji":
+      case "com.azertica.inji.wallet":
         intentData.setQrData(data.toString());
         break;
       case "openid4vp":

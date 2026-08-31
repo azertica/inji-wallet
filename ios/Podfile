@@ -46,6 +46,22 @@ target 'Inji' do
   )
 
   post_install do |installer|
+    # Xcode 26 builds Swift modules explicitly, and the dependency scanner cannot
+    # re-resolve CatCrypto's vendored clang modules (Argon2/MD6/SHA3) from a client
+    # target - the first iOS archive fails with three "Unable to resolve module
+    # dependency" errors in RNArgon2. Verbatim from upstream commit 0759127765, where
+    # it rode along inside an unrelated VCI-bridge change (#2302); our branch predates
+    # it. Keep it byte-identical so the next rebase onto an upstream tag is a no-op
+    # rather than a conflict.
+    installer.pods_project.targets.each do |target|
+      if ['RNArgon2'].include?(target.name)
+        target.build_configurations.each do |config|
+          config.build_settings['SWIFT_ENABLE_EXPLICIT_MODULES'] = 'NO'
+          config.build_settings['DEFINES_MODULE'] = 'YES'
+          config.build_settings['CLANG_ENABLE_MODULES'] = 'YES'
+        end
+      end
+    end
     installer.pods_project.targets.each do |target|
       if target.name == 'RNZipArchive'
         target.source_build_phase.files.each do |file|
