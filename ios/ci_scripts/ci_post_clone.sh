@@ -67,6 +67,7 @@ say "npm ci"
 # removes a network dependency from the critical path.
 export GITHUB_ACTIONS=1
 export CI=true
+export ENABLE_AUTH=false
 export npm_config_fund=false npm_config_audit=false npm_config_progress=false
 
 # Several locked transitive packages use git+ssh URLs for public GitHub repos.
@@ -147,11 +148,11 @@ ok "ios/Pods: $(find "$REPO/ios/Pods" -mindepth 1 2>/dev/null | wc -l | tr -d ' 
 # ------------------------------------------------------------- build number
 say "build number"
 # A local 0.22.1 archive used build 2608310421. Version 0.22.2 deliberately
-# resets to Xcode Cloud's standards-compliant, monotonic workflow build number.
+# resets to a standards-compliant workflow build number. GitHub Actions uses
+# run_number.run_attempt so a retry after a successful upload stays unique.
 build_number="${INJI_BUILD_NUMBER:-${CI_BUILD_NUMBER:?CI_BUILD_NUMBER is unset}}"
-case "$build_number" in
-  *[!0-9]*|'') die "build number must contain digits only: '$build_number'" ;;
-esac
+[[ "$build_number" =~ '^[1-9][0-9]{0,3}(\.[0-9]{1,2}){0,2}$' ]] \
+  || die "build number must match 1-9999 with up to two numeric components: '$build_number'"
 ( cd "$REPO/ios" && agvtool new-version -all "$build_number" >/dev/null ) \
   || die "agvtool new-version failed"
 stamped="$(cd "$REPO/ios" && agvtool what-version -terse 2>/dev/null || echo unknown)"
@@ -173,6 +174,8 @@ done
 [ -f "$REPO/assets/models/faceModel.tflite" ] \
   || die "assets/models/faceModel.tflite missing"
 [ -f "$REPO/ios/.xcode.env.local" ] || die "ios/.xcode.env.local missing"
+[ "$(/usr/libexec/PlistBuddy -c 'Print :ENABLE_AUTH' "$REPO/ios/Inji/Info.plist")" = "false" ] \
+  || die "ENABLE_AUTH must remain false for the nocaps build"
 ok "dependencies, Pods, model, environment, and build number are ready"
 
 say "ci_post_clone complete"

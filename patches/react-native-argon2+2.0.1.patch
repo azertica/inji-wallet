@@ -1,0 +1,7 @@
+diff --git a/node_modules/react-native-argon2/ios/RNArgon2-Bridging-Header.h b/node_modules/react-native-argon2/ios/RNArgon2-Bridging-Header.h
+index 76e9353..5fff35c 100644
+--- a/node_modules/react-native-argon2/ios/RNArgon2-Bridging-Header.h
++++ b/node_modules/react-native-argon2/ios/RNArgon2-Bridging-Header.h
+@@ -1 +1 @@
+-#import "RCTBridgeModule.h"
++#import <React/RCTBridgeModule.h>

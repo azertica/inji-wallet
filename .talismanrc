@@ -168,7 +168,7 @@ fileignoreconfig:
   - filename: shared/VCMetadata.ts
     checksum: c76bd3c825931ac241d8e4f76b8a7444789f49e3b4e45a599b4dcd574f7971c8
   - filename: ios/Podfile.lock
-    checksum: 43bd4742f2ba13357d8b9c44430bfa3cca0bf9bf8341984fd81174a929c85955
+    checksum: a6c064abb99d4b2802ee738c8b5061017cf1d4970fa2f2fb27452ab37eba911a
   - filename: components/BackupAndRestoreBannerNotification.tsx
     checksum: e465a9947727687d784d0cb9d8db1e28f765b0659bf4a3aa6d75643aa7b14102
   - filename: components/ActivityLogEvent.ts
@@ -436,5 +436,10 @@ fileignoreconfig:
     checksum: 6871fad16ecb5f019f502b2f7f715bc2a7b646ee08026b321aa1f8ce071dccc1
   - filename: shared/hooks/useScreenHeight.ts
     checksum: e3f13e7181efc6e6ad5896102bac1309bd8147ba711ff71f64a600a0dffc1364
-    version: "1.0"
-
+  - filename: .github/workflows/az-ios-testflight.yml
+    checksum: 56c5b0c754ada28eef9cf8108c7b9f3094ec7c7a5b48c24590e09aac3d5f7ef3
+  - filename: ios/ExportOptions-Azertica.plist
+    checksum: f02382841899c03bd6d108491bf1808e07a99fe45346804f84f9722f520e56e4
+  - filename: .github/scripts/distribute-testflight-build.mjs
+    checksum: 00772d0338b9c921c91bdcc7e99de2017fc016de5e26fcc3ed8344a41f1c9b4c
+version: "1.0"

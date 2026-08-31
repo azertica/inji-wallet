@@ -1,0 +1,187 @@
+name: Azertica iOS TestFlight
+
+on:
+  push:
+    branches:
+      - release-1.0.x-azertica-nocaps
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: az-ios-testflight-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  archive-and-upload:
+    name: Archive and upload to TestFlight
+    environment: ios-release
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      APP_BUNDLE_ID: com.azertica.inji.wallet
+      APP_MARKETING_VERSION: 0.22.2
+      APPLE_TEAM_ID: 8745JJT697
+      APPSTORE_PROFILE_NAME: AppStore com.azertica.inji.wallet
+      TESTFLIGHT_GROUP_NAME: Azertica internal
+      CI_PRIMARY_REPOSITORY_PATH: ${{ github.workspace }}
+      CI_BUILD_NUMBER: ${{ github.run_number }}.${{ github.run_attempt }}
+      CI_WORKFLOW: Azertica iOS TestFlight
+      ENABLE_AUTH: "false"
+
+    steps:
+      - name: Check out release commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Check TestFlight credentials
+        env:
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          APPSTORE_CERTIFICATES_FILE_BASE64: ${{ secrets.APPSTORE_CERTIFICATES_FILE_BASE64 }}
+          APPSTORE_CERTIFICATES_PASSWORD: ${{ secrets.APPSTORE_CERTIFICATES_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for secret_name in \
+            APPSTORE_ISSUER_ID \
+            APPSTORE_API_KEY_ID \
+            APPSTORE_API_PRIVATE_KEY \
+            APPSTORE_CERTIFICATES_FILE_BASE64 \
+            APPSTORE_CERTIFICATES_PASSWORD
+          do
+            [ -n "${!secret_name:-}" ] || {
+              echo "::error::Missing required GitHub secret: $secret_name"
+              exit 1
+            }
+          done
+
+      - name: Install JavaScript and iOS dependencies
+        run: ios/ci_scripts/ci_post_clone.sh
+
+      - name: Import App Store signing certificate
+        uses: Apple-Actions/import-codesign-certs@7abe6dfe88f6bf6b1fa06e6a5704a2605d897418 # v7
+        with:
+          p12-file-base64: ${{ secrets.APPSTORE_CERTIFICATES_FILE_BASE64 }}
+          p12-password: ${{ secrets.APPSTORE_CERTIFICATES_PASSWORD }}
+
+      - name: Download App Store provisioning profile
+        uses: Apple-Actions/download-provisioning-profiles@ef4c72c40493b58ca46a63a5714a31dc6b62998e # v6
+        with:
+          bundle-id: ${{ env.APP_BUNDLE_ID }}
+          profile-type: IOS_APP_STORE
+          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+
+      - name: Verify signing assets
+        run: |
+          set -euo pipefail
+          security find-identity -v -p codesigning | grep -F "Apple Distribution: Azertica, Inc. ($APPLE_TEAM_ID)"
+
+          found_profile=false
+          while IFS= read -r profile; do
+            profile_name="$(security cms -D -i "$profile" 2>/dev/null | plutil -extract Name raw -o - - 2>/dev/null || true)"
+            app_id="$(security cms -D -i "$profile" 2>/dev/null | plutil -extract Entitlements.application-identifier raw -o - - 2>/dev/null || true)"
+            if [ "$profile_name" = "$APPSTORE_PROFILE_NAME" ] && [ "$app_id" = "$APPLE_TEAM_ID.$APP_BUNDLE_ID" ]; then
+              found_profile=true
+              break
+            fi
+          done < <(find "$HOME/Library/MobileDevice/Provisioning Profiles" "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles" -type f -name '*.mobileprovision' 2>/dev/null)
+
+          [ "$found_profile" = true ] || {
+            echo "::error::The expected App Store provisioning profile was not installed"
+            exit 1
+          }
+
+      - name: Archive signed Release app
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/Inji.xcarchive"
+          result_bundle="$RUNNER_TEMP/Inji-archive.xcresult"
+
+          xcodebuild archive \
+            -workspace ios/Inji.xcworkspace \
+            -scheme Inji \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            -archivePath "$archive" \
+            -resultBundlePath "$result_bundle" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="$APPSTORE_PROFILE_NAME" \
+            2>&1 | tee "$RUNNER_TEMP/archive.log" | xcbeautify
+
+          app="$archive/Products/Applications/Inji.app"
+          [ -d "$app" ] || {
+            echo "::error::Archive did not contain Inji.app"
+            exit 1
+          }
+          codesign --verify --deep --strict "$app"
+
+          archived_bundle="$(/usr/libexec/PlistBuddy -c 'Print :ApplicationProperties:CFBundleIdentifier' "$archive/Info.plist")"
+          archived_version="$(/usr/libexec/PlistBuddy -c 'Print :ApplicationProperties:CFBundleShortVersionString' "$archive/Info.plist")"
+          archived_build="$(/usr/libexec/PlistBuddy -c 'Print :ApplicationProperties:CFBundleVersion' "$archive/Info.plist")"
+          [ "$archived_bundle" = "$APP_BUNDLE_ID" ]
+          [ "$archived_version" = "$APP_MARKETING_VERSION" ]
+          [ "$archived_build" = "$CI_BUILD_NUMBER" ]
+
+      - name: Export signed IPA
+        id: export
+        run: |
+          set -euo pipefail
+          export_dir="$RUNNER_TEMP/export"
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Inji.xcarchive" \
+            -exportOptionsPlist ios/ExportOptions-Azertica.plist \
+            -exportPath "$export_dir" \
+            2>&1 | tee "$RUNNER_TEMP/export.log" | xcbeautify
+
+          ipa="$(find "$export_dir" -maxdepth 1 -type f -name '*.ipa' -print -quit)"
+          [ -n "$ipa" ] || {
+            echo "::error::Archive export produced no IPA"
+            exit 1
+          }
+          echo "ipa=$ipa" >> "$GITHUB_OUTPUT"
+
+      - name: Keep IPA as a workflow artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: Inji-iOS-${{ github.run_number }}-${{ github.run_attempt }}
+          path: ${{ steps.export.outputs.ipa }}
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload build to TestFlight
+        uses: Apple-Actions/upload-testflight-build@94c406fd91f8b13b4c1fb078f1de09a76910513a # v5
+        with:
+          app-path: ${{ steps.export.outputs.ipa }}
+          app-type: ios
+          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          release-notes: Commit ${{ github.sha }} from ${{ github.ref_name }}
+          uses-non-exempt-encryption: "false"
+          wait-for-processing: "true"
+
+      - name: Distribute to internal testers
+        env:
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+        run: .ci-node/bin/node .github/scripts/distribute-testflight-build.mjs
+
+      - name: Upload build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: Inji-iOS-${{ github.run_number }}-${{ github.run_attempt }}-logs
+          path: |
+            ${{ runner.temp }}/archive.log
+            ${{ runner.temp }}/export.log
+            ${{ runner.temp }}/Inji-archive.xcresult
+          if-no-files-found: ignore
+          include-hidden-files: true
+          retention-days: 14
