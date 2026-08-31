@@ -168,7 +168,7 @@ fileignoreconfig:
   - filename: shared/VCMetadata.ts
     checksum: c76bd3c825931ac241d8e4f76b8a7444789f49e3b4e45a599b4dcd574f7971c8
   - filename: ios/Podfile.lock
-    checksum: a6c064abb99d4b2802ee738c8b5061017cf1d4970fa2f2fb27452ab37eba911a
+    checksum: f710a03919af36a0b54aa14570253d474b5076ee491e9cb066489587e3f15060
   - filename: components/BackupAndRestoreBannerNotification.tsx
     checksum: e465a9947727687d784d0cb9d8db1e28f765b0659bf4a3aa6d75643aa7b14102
   - filename: components/ActivityLogEvent.ts
